@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (main, fibCPS)
 
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram)
@@ -22,6 +22,19 @@ fibTCO =
     fib 1 0
 
 
+fibCPS : Int -> (Int -> r) -> r
+fibCPS n return =
+    let
+        go i k =
+            if i <= 0 then
+                k 1 0
+
+            else
+                go (i - 1) (\acc prev -> k (acc + prev) acc)
+    in
+    go n (\acc _ -> return acc)
+
+
 suite : Benchmark
 suite =
     describe "tail call optimization"
@@ -34,4 +47,5 @@ suite =
                 List.range 1 10000
                     |> List.foldl (+) 0
         , benchmark "fibTCO 100" <| \_ -> fibTCO 100
+        , benchmark "fibCPS 100 identity" <| \_ -> fibCPS 100 identity
         ]
